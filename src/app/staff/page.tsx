@@ -5,6 +5,7 @@ import { Briefcase, CheckCircle2, Clock, MapPin, Search, Edit3, ArrowRight, Mess
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import TrackingModal from '@/components/TrackingModal';
+import AuthModal from '@/components/AuthModal';
 import { useApp } from '@/lib/store';
 import { Shipment, ShipmentStatus } from '@/lib/types';
 
@@ -358,6 +359,7 @@ export default function StaffPortalPage() {
 
       <Footer />
       <TrackingModal />
+      <AuthModal />
     </div>
   );
 }

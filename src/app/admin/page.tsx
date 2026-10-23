@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Shield, Users, DollarSign, TrendingUp, Activity, Database, CheckCircle, RefreshCw } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import AuthModal from '@/components/AuthModal';
 import { useApp } from '@/lib/store';
 import { DEMO_USERS } from '@/lib/mockData';
 import { UserProfile, UserRole } from '@/lib/types';
@@ -180,6 +181,7 @@ export default function AdminPage() {
       </main>
 
       <Footer />
+      <AuthModal />
     </div>
   );
 }

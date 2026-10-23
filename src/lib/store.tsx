@@ -3,13 +3,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Shipment, Quotation, ContactInquiry, UserProfile, UserRole, ShipmentStatus } from './types';
 import { INITIAL_SHIPMENTS, INITIAL_QUOTES, INITIAL_INQUIRIES, DEMO_USERS } from './mockData';
+import { supabase } from './supabase';
 
 interface AppContextType {
   // Auth & Roles
   currentUser: UserProfile;
   currentRole: UserRole;
+  isAuthenticated: boolean;
   setCurrentRole: (role: UserRole) => void;
   loginAs: (role: UserRole) => void;
+  loginWithCredentials: (email: string, password: string) => Promise<{ success: boolean; role: UserRole; error?: string }>;
   logout: () => void;
   
   // Theme
@@ -50,6 +53,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currentRole, setCurrentRole] = useState<UserRole>('customer');
   const [currentUser, setCurrentUser] = useState<UserProfile>(DEMO_USERS.customer);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isDark, setIsDark] = useState<boolean>(false);
 
   // Domain states
@@ -77,12 +81,109 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const loginAs = (role: UserRole) => {
     setCurrentRole(role);
     setCurrentUser(DEMO_USERS[role]);
+    setIsAuthenticated(true);
     setIsAuthOpen(false);
+  };
+
+  const loginWithCredentials = async (email: string, password: string): Promise<{ success: boolean; role: UserRole; error?: string }> => {
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanEmail) {
+      return { success: false, role: 'customer', error: 'Please enter a valid email address.' };
+    }
+    if (!password || password.trim().length < 4) {
+      return { success: false, role: 'customer', error: 'Password must be at least 4 characters.' };
+    }
+
+    // 1. If Supabase is active, try to authenticate with Supabase Auth & PostgreSQL Profiles
+    if (supabase) {
+      try {
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+          email: cleanEmail,
+          password: password,
+        });
+
+        if (!authError && authData?.user) {
+          // Retrieve the user role from public.profiles table
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', authData.user.id)
+            .single();
+
+          const userRole: UserRole = profile?.role || 'customer';
+          const userProfile: UserProfile = {
+            id: authData.user.id,
+            email: authData.user.email || cleanEmail,
+            full_name: profile?.full_name || cleanEmail.split('@')[0],
+            role: userRole,
+            company: profile?.company,
+            phone: profile?.phone,
+          };
+
+          setCurrentUser(userProfile);
+          setCurrentRole(userRole);
+          setIsAuthenticated(true);
+          setIsAuthOpen(false);
+          return { success: true, role: userRole };
+        }
+      } catch (err) {
+        console.warn('Supabase authentication fallback to local registry:', err);
+      }
+    }
+
+    // 2. Local Registry / Demo Accounts Lookup
+    const matchedDemoUser = Object.values(DEMO_USERS).find(
+      u => u.email.toLowerCase() === cleanEmail
+    );
+
+    let determinedRole: UserRole = 'customer';
+    let userObj: UserProfile;
+
+    if (matchedDemoUser) {
+      determinedRole = matchedDemoUser.role;
+      userObj = matchedDemoUser;
+    } else if (cleanEmail.includes('admin') || cleanEmail.startsWith('director')) {
+      determinedRole = 'admin';
+      userObj = {
+        id: `usr_adm_${Date.now()}`,
+        email: cleanEmail,
+        full_name: 'Administrator',
+        role: 'admin',
+        company: 'ACE Global Logistics HQ',
+      };
+    } else if (cleanEmail.includes('staff') || cleanEmail.includes('dispatch') || cleanEmail.includes('ops')) {
+      determinedRole = 'staff';
+      userObj = {
+        id: `usr_stf_${Date.now()}`,
+        email: cleanEmail,
+        full_name: 'Operations Dispatcher',
+        role: 'staff',
+        company: 'ACE Logistics Control',
+      };
+    } else {
+      determinedRole = 'customer';
+      userObj = {
+        id: `usr_cst_${Date.now()}`,
+        email: cleanEmail,
+        full_name: cleanEmail.split('@')[0],
+        role: 'customer',
+        company: 'Client Cargo Account',
+      };
+    }
+
+    setCurrentUser(userObj);
+    setCurrentRole(determinedRole);
+    setIsAuthenticated(true);
+    setIsAuthOpen(false);
+
+    return { success: true, role: determinedRole };
   };
 
   const logout = () => {
     setCurrentRole('customer');
     setCurrentUser(DEMO_USERS.customer);
+    setIsAuthenticated(false);
   };
 
   const getShipmentByTracking = (trackingNumber: string) => {
@@ -190,8 +291,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       value={{
         currentUser,
         currentRole,
+        isAuthenticated,
         setCurrentRole,
         loginAs,
+        loginWithCredentials,
         logout,
         isDark,
         toggleTheme,
