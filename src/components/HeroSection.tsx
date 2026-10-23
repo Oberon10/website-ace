@@ -24,12 +24,12 @@ export default function HeroSection() {
           alt="ACE Global Logistics multimodal shipping fleet with ship, truck, and air cargo"
           fill
           priority
-          className="object-cover object-center lg:object-[center_right] opacity-95"
+          className="object-cover object-[70%_center] lg:object-right opacity-100"
           sizes="100vw"
         />
-        {/* Cinematic gradient overlay matching reference design */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#071324]/95 via-[#071324]/80 to-transparent lg:w-3/5 pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#071324]/60 via-transparent to-transparent pointer-events-none" />
+        {/* Sleek contrast gradient for headline and CTAs */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#071324]/95 via-[#071324]/80 to-transparent lg:w-[56%] pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#071324]/70 via-transparent to-transparent pointer-events-none sm:hidden" />
       </div>
 
       {/* Content Container */}
