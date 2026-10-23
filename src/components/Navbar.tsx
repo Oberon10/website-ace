@@ -22,10 +22,10 @@ export default function Navbar() {
 
   const navLinks = [
     { label: 'Home', href: '/' },
-    { label: 'Services', href: '/#services' },
-    { label: 'Tracking', href: '/#tracking' },
+    { label: 'Services', href: '/services' },
+    { label: 'Tracking', href: '/tracking' },
     { label: 'About', href: '/#about' },
-    { label: 'Contact', href: '/#contact' },
+    { label: 'Contact', href: '/contact' },
   ];
 
   const getDashboardHref = () => {

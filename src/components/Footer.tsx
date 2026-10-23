@@ -7,10 +7,10 @@ import Logo from './Logo';
 export default function Footer() {
   const navLinks = [
     { label: 'Home', href: '/' },
-    { label: 'Services', href: '/#services' },
-    { label: 'Tracking', href: '/#tracking' },
+    { label: 'Services', href: '/services' },
+    { label: 'Tracking', href: '/tracking' },
     { label: 'About', href: '/#about' },
-    { label: 'Contact', href: '/#contact' },
+    { label: 'Contact', href: '/contact' },
   ];
 
   return (
