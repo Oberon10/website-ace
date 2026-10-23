@@ -23,6 +23,7 @@ export type ShipmentStatus =
 
 export interface Checkpoint {
   id: string;
+  shipment_id?: string;
   status: ShipmentStatus;
   title: string;
   location: string;
