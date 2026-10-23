@@ -67,16 +67,58 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [trackingModalNumber, setTrackingModalNumber] = useState<string | null>(null);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
 
-  // Apply dark mode class to html element
+  // Initialize and synchronize theme
   useEffect(() => {
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [isDark]);
+    try {
+      const savedTheme = localStorage.getItem('ace_theme');
+      if (savedTheme === 'dark') {
+        setIsDark(true);
+        document.documentElement.classList.add('dark');
+      } else if (savedTheme === 'light') {
+        setIsDark(false);
+        document.documentElement.classList.remove('dark');
+      } else {
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        setIsDark(prefersDark);
+        if (prefersDark) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }
+    } catch {}
 
-  const toggleTheme = () => setIsDark(prev => !prev);
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'ace_theme') {
+        if (e.newValue === 'dark') {
+          setIsDark(true);
+          document.documentElement.classList.add('dark');
+        } else if (e.newValue === 'light') {
+          setIsDark(false);
+          document.documentElement.classList.remove('dark');
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  const toggleTheme = () => {
+    setIsDark((prev) => {
+      const next = !prev;
+      try {
+        if (next) {
+          document.documentElement.classList.add('dark');
+          localStorage.setItem('ace_theme', 'dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+          localStorage.setItem('ace_theme', 'light');
+        }
+      } catch {}
+      return next;
+    });
+  };
 
   const loginAs = (role: UserRole) => {
     setCurrentRole(role);
